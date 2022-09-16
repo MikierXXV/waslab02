@@ -43,11 +43,18 @@ function likeHandler(tweetID) {
 }
 
 function deleteHandler(tweetID) {
-	/*
-
-	 * TASK #4 
-
-	 */	
+	//TASK #4	
+	var uri = tweetsURI+ "/" + tweetID;
+	req = new XMLHttpRequest();
+	req.open('DELETE', uri, /*async*/true);
+	req.onload = function() { 
+		if (req.status == 200) { // 200 OK
+			let element = document.getElementById("tweet_"+tweetID);
+			element.remove();
+			
+		}
+	};
+	req.send(/*no params*/null);
 }
 
 function getTweetHTML(tweet, action) {  // action :== "like" xor "delete"
@@ -90,8 +97,6 @@ function tweetHandler() {
 	req.setRequestHeader("Content-Type","application/json");
 	req.send(JSON.stringify({author, text}));
 	
-	var mes1 = "Someone ({0}) wants to insert a new tweet ('{1}'),\n but this feature is not implemented yet!";
-	alert(mes1.format(author, text));
 
 	// clear form fields
 	document.getElementById("tweet_author").value = "";
