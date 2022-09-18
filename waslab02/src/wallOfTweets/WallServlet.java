@@ -1,6 +1,8 @@
 package wallOfTweets;
 
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 
 import javax.servlet.ServletException;
@@ -38,6 +40,26 @@ public class WallServlet extends HttpServlet {
 		}
 		resp.getWriter().println(job.toString());
 	}
+	
+	private String convertirMD5(String id) {
+		MessageDigest mdigest = null;
+		try {
+			mdigest = MessageDigest.getInstance("MD5");
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		byte[] hash = mdigest.digest(id.getBytes());
+		StringBuffer s = new StringBuffer();
+		
+		for (byte b: hash) {
+			s.append(Integer.toHexString((b & 0xFF) | 0x100).substring(1,3));		
+		}
+		return s.toString();
+	}
+
+
 
 	@Override
 	// Implements POST http://localhost:8080/waslab02/tweets/:id/likes
@@ -68,6 +90,8 @@ public class WallServlet extends HttpServlet {
 					Tweet tw = null;
 					tw = Database.insertTweet(a, t);
 					JSONObject njs = new JSONObject(tw);
+					// tasca #5
+					njs.put("token", convertirMD5(String.valueOf(tw.getId())));
 					resp.getWriter().println(njs.toString());
 					
 					
@@ -90,8 +114,11 @@ public class WallServlet extends HttpServlet {
 		String uri = req.getRequestURI();
 		Long id = Long.valueOf(uri.substring(TWEETS_URI.length()));
 		boolean remove = false;
-		remove = Database.deleteTweet(id);
 		
+		String tk = req.getQueryString();
+		tk = tk.substring(6, tk.length());
+		String idtk = convertirMD5(String.valueOf(id));
+		if (!tk.isEmpty() && tk.equals(idtk)) remove = Database.deleteTweet(id);
 		if (!remove || uri.isEmpty())
 			throw new ServletException("DELETE not yet implemented");
 	}
